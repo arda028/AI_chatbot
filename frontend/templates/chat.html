@@ -1,0 +1,57 @@
+  <!DOCTYPE html>
+<html>
+<head>
+  <title>Ask About SQL</title>
+</head>
+<body>
+  <h1>Ask a Question About Your SQL</h1>
+
+  <!-- Input form for question -->
+  <form id="question-form">
+    <input type="text" id="question" placeholder="Ask your question..." size="50" required>
+    <button type="submit">Ask</button>
+  </form>
+
+  <h2>Response:</h2>
+  <pre id="response"></pre>
+
+  <!-- Embed the SQL schema as JSON -->
+  <script id="sql-schema" type="application/json">
+    {{ sql_query | tojson | safe }}
+  </script>
+
+  <script>
+    // Read the JSON schema from script tag
+    const sqlContext = JSON.parse(document.getElementById("sql-schema").textContent);
+
+    // Handle form submission
+    document.getElementById("question-form").addEventListener("submit", async function(event) {
+      event.preventDefault();
+      const question = document.getElementById("question").value.trim();
+
+      if (!question || !sqlContext) {
+        alert("Please make sure both your SQL schema and question are provided.");
+        return;
+      }
+
+      try {
+        const response = await fetch("/ask", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            question: question,
+            sql_query: sqlContext
+          })
+        });
+
+        const data = await response.json();
+        document.getElementById("response").textContent = data.response;
+      } catch (err) {
+        document.getElementById("response").textContent = "An error occurred: " + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
